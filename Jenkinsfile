@@ -22,7 +22,7 @@ pipeline {
             steps {
                 sh '''
                 /var/lib/jenkins/ansible-env/bin/python -m venv venv
-                source venv/bin/activate
+                . venv/bin/activate
                 pip install -r requirements.txt
                 '''
             }
@@ -31,7 +31,7 @@ pipeline {
         stage('Run Tests') {
             steps {
                 sh '''
-                source venv/bin/activate
+                . venv/bin/activate
                 pytest tests/
                 '''
             }
