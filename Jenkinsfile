@@ -4,7 +4,6 @@ pipeline {
     environment {
         DOCKER_IMAGE = "streamlit_app"
         APP_PORT = "8501"
-        PATH = "/var/lib/jenkins/ansible-env/bin:/usr/bin:${env.PATH}" // Updated PATH to use the new location
     }
 
     tools {
@@ -21,9 +20,8 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 sh '''
-                /var/lib/jenkins/ansible-env/bin/python -m venv venv
-                . venv/bin/activate
-                pip install -r requirements.txt
+                sudo apt-get install python3-pip
+                pip3 install -r requirements.txt
                 '''
             }
         }
@@ -31,7 +29,6 @@ pipeline {
         stage('Run Tests') {
             steps {
                 sh '''
-                . venv/bin/activate
                 pytest tests/
                 '''
             }
@@ -39,31 +36,25 @@ pipeline {
 
         stage('Build Docker Image with Ansible') {
             steps {
-                ansiColor('xterm') {
-                    sh '''
-                    /var/lib/jenkins/ansible-env/bin/ansible-playbook -i localhost, -c local playbook.yml --tags "build"
-                    '''
-                }
+                sh '''
+                ansible-playbook -i localhost, -c local playbook.yml --tags build
+                '''
             }
         }
 
         stage('Stop Existing Container with Ansible') {
             steps {
-                ansiColor('xterm') {
-                    sh '''
-                    /var/lib/jenkins/ansible-env/bin/ansible-playbook -i localhost, -c local playbook.yml --tags "stop"
-                    '''
-                }
+                sh '''
+                ansible-playbook -i localhost, -c local playbook.yml --tags stop
+                '''
             }
         }
 
         stage('Deploy Application with Ansible') {
             steps {
-                ansiColor('xterm') {
-                    sh '''
-                    /var/lib/jenkins/ansible-env/bin/ansible-playbook -i localhost, -c local playbook.yml --tags "deploy"
-                    '''
-                }
+                sh '''
+                ansible-playbook -i localhost, -c local playbook.yml --tags deploy
+                '''
             }
         }
     }
@@ -71,7 +62,6 @@ pipeline {
     post {
         always {
             echo 'Cleaning up workspace...'
-            sh 'rm -rf venv'
         }
         success {
             echo 'Pipeline completed successfully!'
