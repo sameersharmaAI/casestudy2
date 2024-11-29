@@ -2,24 +2,22 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "streamlit_app" // Docker image name
-        APP_PORT = "8501" // Port for the Streamlit app
+        DOCKER_IMAGE = "streamlit_app"
+        APP_PORT = "8501"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Clone the repository
-                git branch: 'main', url: 'https://github.com/sameersharmaAI/casestudy2.git'
+                git branch: 'main', url: 'https://github.com/sameersharmaAI/casestudy2'
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                // Ensure Python dependencies are installed for tests
                 bat '''
-                python3 -m venv venv
-                source venv/bin/activate
+                python -m venv venv
+                venv\\Scripts\\activate.bat
                 pip install -r requirements.txt
                 '''
             }
@@ -27,54 +25,53 @@ pipeline {
 
         stage('Run Tests') {
             steps {
-                // Run pytest tests
                 bat '''
-                source venv/bin/activate
+                venv\\Scripts\\activate.bat
                 pytest tests/
                 '''
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build Docker Image with Ansible') {
             steps {
-                // Build the Docker image
-                bat '''
-                docker build -t ${DOCKER_IMAGE} .
-                '''
+                ansiColor('xterm') {
+                    sh '''
+                    ansible-playbook -i localhost, -c local playbook.yml --tags "build"
+                    '''
+                }
             }
         }
 
-        stage('Stop Existing Container') {
+        stage('Stop Existing Container with Ansible') {
             steps {
-                // Stop and remove the existing container if it's running
-                bat '''
-                docker ps -q --filter "name=${DOCKER_IMAGE}" | grep -q . && docker stop ${DOCKER_IMAGE} && docker rm ${DOCKER_IMAGE} || true
-                '''
+                ansiColor('xterm') {
+                    sh '''
+                    ansible-playbook -i localhost, -c local playbook.yml --tags "stop"
+                    '''
+                }
             }
         }
 
-        stage('Deploy Application') {
+        stage('Deploy Application with Ansible') {
             steps {
-                // Run the Streamlit app container
-                bat '''
-                docker run -d --name ${DOCKER_IMAGE} -p ${APP_PORT}:${APP_PORT} ${DOCKER_IMAGE}
-                '''
+                ansiColor('xterm') {
+                    sh '''
+                    ansible-playbook -i localhost, -c local playbook.yml --tags "deploy"
+                    '''
+                }
             }
         }
     }
 
     post {
         always {
-            // Cleanup virtual environment
-            bat '''
-            rm -rf venv
-            '''
+            echo 'Cleaning up workspace...'
         }
         success {
-            echo 'Deployment successful!'
+            echo 'Pipeline completed successfully!'
         }
         failure {
-            echo 'Deployment failed!'
+            echo 'Pipeline failed!'
         }
     }
 }
