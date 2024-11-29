@@ -8,7 +8,7 @@ pipeline {
     }
 
     tools {
-        docker 'docker' // Use the Docker tool configured in Jenkins
+        dockerTool 'docker' // Use the Docker tool configured in Jenkins
     }
 
     stages {
