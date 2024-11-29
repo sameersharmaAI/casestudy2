@@ -17,34 +17,51 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Setup Virtual Environment and Install Dependencies') {
             steps {
-                // Since dependencies are already installed, we just install from requirements.txt
-                sh 'pip3 install -r requirements.txt'
+                // Create virtual environment and install dependencies
+                sh '''
+                python3 -m venv venv
+                source venv/bin/activate
+                pip install --upgrade pip
+                pip install -r requirements.txt
+                '''
             }
         }
 
         stage('Run Tests') {
             steps {
-                sh 'pytest tests/'
+                sh '''
+                source venv/bin/activate
+                pytest tests/
+                '''
             }
         }
 
         stage('Build Docker Image with Ansible') {
             steps {
-                sh 'ansible-playbook -i localhost, -c local playbook.yml --tags build'
+                sh '''
+                source venv/bin/activate
+                ansible-playbook -i localhost, -c local playbook.yml --tags build
+                '''
             }
         }
 
         stage('Stop Existing Container with Ansible') {
             steps {
-                sh 'ansible-playbook -i localhost, -c local playbook.yml --tags stop'
+                sh '''
+                source venv/bin/activate
+                ansible-playbook -i localhost, -c local playbook.yml --tags stop
+                '''
             }
         }
 
         stage('Deploy Application with Ansible') {
             steps {
-                sh 'ansible-playbook -i localhost, -c local playbook.yml --tags deploy'
+                sh '''
+                source venv/bin/activate
+                ansible-playbook -i localhost, -c local playbook.yml --tags deploy
+                '''
             }
         }
     }
@@ -52,6 +69,7 @@ pipeline {
     post {
         always {
             echo 'Cleaning up workspace...'
+            sh 'rm -rf venv'  // Remove the virtual environment after the pipeline
         }
         success {
             echo 'Pipeline completed successfully!'
