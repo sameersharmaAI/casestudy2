@@ -19,42 +19,32 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh '''
-                apt-get install python3-pip
-                pip3 install -r requirements.txt
-                '''
+                // Since dependencies are already installed, we just install from requirements.txt
+                sh 'pip3 install -r requirements.txt'
             }
         }
 
         stage('Run Tests') {
             steps {
-                sh '''
-                pytest tests/
-                '''
+                sh 'pytest tests/'
             }
         }
 
         stage('Build Docker Image with Ansible') {
             steps {
-                sh '''
-                ansible-playbook -i localhost, -c local playbook.yml --tags build
-                '''
+                sh 'ansible-playbook -i localhost, -c local playbook.yml --tags build'
             }
         }
 
         stage('Stop Existing Container with Ansible') {
             steps {
-                sh '''
-                ansible-playbook -i localhost, -c local playbook.yml --tags stop
-                '''
+                sh 'ansible-playbook -i localhost, -c local playbook.yml --tags stop'
             }
         }
 
         stage('Deploy Application with Ansible') {
             steps {
-                sh '''
-                ansible-playbook -i localhost, -c local playbook.yml --tags deploy
-                '''
+                sh 'ansible-playbook -i localhost, -c local playbook.yml --tags deploy'
             }
         }
     }
