@@ -17,7 +17,7 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 // Ensure Python dependencies are installed for tests
-                sh '''
+                bat '''
                 python3 -m venv venv
                 source venv/bin/activate
                 pip install -r requirements.txt
@@ -28,7 +28,7 @@ pipeline {
         stage('Run Tests') {
             steps {
                 // Run pytest tests
-                sh '''
+                bat '''
                 source venv/bin/activate
                 pytest tests/
                 '''
@@ -38,7 +38,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 // Build the Docker image
-                sh '''
+                bat '''
                 docker build -t ${DOCKER_IMAGE} .
                 '''
             }
@@ -47,7 +47,7 @@ pipeline {
         stage('Stop Existing Container') {
             steps {
                 // Stop and remove the existing container if it's running
-                sh '''
+                bat '''
                 docker ps -q --filter "name=${DOCKER_IMAGE}" | grep -q . && docker stop ${DOCKER_IMAGE} && docker rm ${DOCKER_IMAGE} || true
                 '''
             }
@@ -56,7 +56,7 @@ pipeline {
         stage('Deploy Application') {
             steps {
                 // Run the Streamlit app container
-                sh '''
+                bat '''
                 docker run -d --name ${DOCKER_IMAGE} -p ${APP_PORT}:${APP_PORT} ${DOCKER_IMAGE}
                 '''
             }
@@ -66,7 +66,7 @@ pipeline {
     post {
         always {
             // Cleanup virtual environment
-            sh '''
+            bat '''
             rm -rf venv
             '''
         }
