@@ -4,7 +4,7 @@ pipeline {
     environment {
         DOCKER_IMAGE = "streamlit_app"
         APP_PORT = "8501"
-        PATH = "/root/ansible-env/bin:/usr/bin:${env.PATH}" // Include Ansible and Docker paths
+        PATH = "/var/lib/jenkins/ansible-env/bin:/usr/bin:${env.PATH}"
     }
 
     tools {
