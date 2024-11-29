@@ -22,7 +22,7 @@ pipeline {
                 // Create virtual environment and install dependencies
                 sh '''
                 python3 -m venv venv
-                source venv/bin/activate
+                . venv/bin/activate
                 pip install --upgrade pip
                 pip install -r requirements.txt
                 '''
@@ -32,7 +32,7 @@ pipeline {
         stage('Run Tests') {
             steps {
                 sh '''
-                source venv/bin/activate
+                . venv/bin/activate
                 pytest tests/
                 '''
             }
@@ -41,7 +41,7 @@ pipeline {
         stage('Build Docker Image with Ansible') {
             steps {
                 sh '''
-                source venv/bin/activate
+                . venv/bin/activate
                 ansible-playbook -i localhost, -c local playbook.yml --tags build
                 '''
             }
@@ -50,7 +50,7 @@ pipeline {
         stage('Stop Existing Container with Ansible') {
             steps {
                 sh '''
-                source venv/bin/activate
+                . venv/bin/activate
                 ansible-playbook -i localhost, -c local playbook.yml --tags stop
                 '''
             }
@@ -59,7 +59,7 @@ pipeline {
         stage('Deploy Application with Ansible') {
             steps {
                 sh '''
-                source venv/bin/activate
+                . venv/bin/activate
                 ansible-playbook -i localhost, -c local playbook.yml --tags deploy
                 '''
             }
