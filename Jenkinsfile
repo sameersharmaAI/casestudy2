@@ -4,6 +4,7 @@ pipeline {
     environment {
         DOCKER_IMAGE = "streamlit_app"
         APP_PORT = "8501"
+        PATH = "/root/ansible-env/bin:/usr/bin:${env.PATH}" // Update PATH to include virtual environment and system binaries
     }
 
     stages {
@@ -15,9 +16,9 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                bat '''
-                python -m venv venv
-                venv\\Scripts\\activate.bat
+                sh '''
+                /root/ansible-env/bin/python -m venv venv
+                source venv/bin/activate
                 pip install -r requirements.txt
                 '''
             }
@@ -25,8 +26,8 @@ pipeline {
 
         stage('Run Tests') {
             steps {
-                bat '''
-                venv\\Scripts\\activate.bat
+                sh '''
+                source venv/bin/activate
                 pytest tests/
                 '''
             }
@@ -36,7 +37,7 @@ pipeline {
             steps {
                 ansiColor('xterm') {
                     sh '''
-                    ansible-playbook -i localhost, -c local playbook.yml --tags "build"
+                    /root/ansible-env/bin/ansible-playbook -i localhost, -c local playbook.yml --tags "build"
                     '''
                 }
             }
@@ -46,7 +47,7 @@ pipeline {
             steps {
                 ansiColor('xterm') {
                     sh '''
-                    ansible-playbook -i localhost, -c local playbook.yml --tags "stop"
+                    /root/ansible-env/bin/ansible-playbook -i localhost, -c local playbook.yml --tags "stop"
                     '''
                 }
             }
@@ -56,7 +57,7 @@ pipeline {
             steps {
                 ansiColor('xterm') {
                     sh '''
-                    ansible-playbook -i localhost, -c local playbook.yml --tags "deploy"
+                    /root/ansible-env/bin/ansible-playbook -i localhost, -c local playbook.yml --tags "deploy"
                     '''
                 }
             }
@@ -66,6 +67,7 @@ pipeline {
     post {
         always {
             echo 'Cleaning up workspace...'
+            sh 'rm -rf venv' // Clean up the virtual environment
         }
         success {
             echo 'Pipeline completed successfully!'
