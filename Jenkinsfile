@@ -4,7 +4,11 @@ pipeline {
     environment {
         DOCKER_IMAGE = "streamlit_app"
         APP_PORT = "8501"
-        PATH = "/root/ansible-env/bin:/usr/bin:${env.PATH}" // Update PATH to include virtual environment and system binaries
+        PATH = "/root/ansible-env/bin:/usr/bin:${env.PATH}" // Include Ansible and Docker paths
+    }
+
+    tools {
+        docker 'docker' // Use the Docker tool configured in Jenkins
     }
 
     stages {
@@ -67,7 +71,7 @@ pipeline {
     post {
         always {
             echo 'Cleaning up workspace...'
-            sh 'rm -rf venv' // Clean up the virtual environment
+            sh 'rm -rf venv'
         }
         success {
             echo 'Pipeline completed successfully!'
